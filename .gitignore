@@ -1,0 +1,6 @@
+# Ignore all hidden files and folders everywhere
+**/.*
+
+# But keep these:
+!.gitignore
+!.github/
