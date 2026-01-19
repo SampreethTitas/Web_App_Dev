@@ -1,0 +1,102 @@
+use shop
+
+db.catalog.insertMany([
+  {
+    title: "Wireless Bluetooth Headphones",
+    description: "Comfortable over-ear headphones with noise cancellation and up to 30 hours battery.",
+    category: "Electronics",
+    price: 129.99,
+    tags: ["audio", "wireless", "bluetooth"]
+  },
+  {
+    title: "Noise Cancelling Earbuds",
+    description: "True wireless earbuds with active noise cancellation and wireless charging case.",
+    category: "Electronics",
+    price: 89.50,
+    tags: ["audio", "earbuds", "wireless"]
+  },
+  {
+    title: "Organic Dark Roast Coffee Beans",
+    description: "Single origin Arabica beans, rich flavor, roasted in small batches.",
+    category: "Grocery",
+    price: 15.0,
+    tags: ["coffee", "organic", "beverage"]
+  },
+  {
+    title: "Stainless Steel Travel Mug",
+    description: "Insulated travel mug, 500ml, keeps drinks hot for 6 hours.",
+    category: "Home",
+    price: 19.99,
+    tags: ["kitchen", "travel", "mug"]
+  },
+  {
+    title: "Bluetooth Speaker Outdoor",
+    description: "Portable Bluetooth speaker, IPX7 waterproof, 12-hour battery life for outdoor use.",
+    category: "Electronics",
+    price: 59.99,
+    tags: ["audio", "speaker", "outdoor"]
+  }
+]);
+db.catalog.find().pretty()
+db.catalog.createIndex(
+  { title: "text", description: "text" },
+  { name: "TextIndex_Title_Desc", default_language: "english" }
+);
+db.catalog.getIndexes()
+db.catalog.aggregate([
+  // 1) text match
+  { $match: { $text: { $search: "wireless battery" } } },
+
+  // 2) project fields + include textScore metadata
+  {
+    $project: {
+      title: 1,
+      description: 1,
+      category: 1,
+      price: 1,
+      score: { $meta: "textScore" }     // include relevance score
+    }
+  },
+
+  // 3) sort by score descending (highest relevance first)
+  { $sort: { score: -1 } },
+
+  // 4) limit results
+  { $limit: 10 }
+]);
+db.catalog.aggregate([
+  { $match: { $text: { $search: "bluetooth" } } },
+  {
+    $match: {
+      category: "Electronics",
+      price: { $lte: 100 }
+    }
+  },
+  {
+    $project: {
+      title: 1, price: 1, tags: 1,
+      score: { $meta: "textScore" }
+    }
+  },
+  { $sort: { score: -1, price: 1 } },
+  { $limit: 20 }
+]);
+db.catalog.aggregate([
+  { $match: { $text: { $search: "wireless bluetooth" } } },
+
+  { $facet: {
+      results: [
+        { $project: { title:1, price:1, category:1, score: { $meta: "textScore" } } },
+        { $sort: { score: -1 } },
+        { $limit: 10 }
+      ],
+      priceStats: [
+        { $group: { _id: null, min: { $min: "$price" }, max: { $max: "$price" }, avg: { $avg: "$price" } } }
+      ],
+      byCategory: [
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]
+    }
+  }
+]);

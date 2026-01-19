@@ -1,0 +1,74 @@
+use company
+
+db.employees.insertMany([
+  {
+    "_id": 1,
+    "name": "Alice",
+    "age": 30,
+    "salary": 75000,
+    "department": "Engineering",
+    "skills": ["nodejs","react"],
+    "joined": new Date("2021-03-15"),
+    "isActive": true
+  },
+  {
+    "_id": 2,
+    "name": "Bob",
+    "age": 25,
+    "salary": 48000,
+    "department": "Marketing",
+    "skills": ["seo","content"],
+    "joined": new Date("2020-11-10"),
+    "isActive": true
+  },
+  {
+    "_id": 3,
+    "name": "Carol",
+    "age": 35,
+    "salary": 98000,
+    "department": "Engineering",
+    "skills": ["java","aws"],
+    "joined": new Date("2018-06-01"),
+    "isActive": false
+  },
+  {
+    "_id": 4,
+    "name": "Dave",
+    "age": 28,
+    "salary": 60000,
+    "department": "HR",
+    "skills": [],
+    "joined": new Date("2022-01-20"),
+    "isActive": true,
+    "manager": null
+  }
+])
+
+db.employees.find().pretty()
+
+db.employees.find({ department: "Engineering" }).pretty()
+db.employees.find({ department: { $ne: "Engineering" } }).pretty()
+db.employees.find({ salary: { $gt: 60000 } }).pretty()
+db.employees.find({ age: { $gte: 26, $lte: 35 } }).pretty()
+db.employees.find({ department: { $in: ["Engineering", "HR"] } }).pretty()
+db.employees.find({ manager: { $exists: true } }).pretty()
+db.employees.find({ manager: { $exists: false } }).pretty()
+db.employees.find({
+  $or: [
+    { department: "Engineering" },
+    { salary: { $gt: 90000 } }
+  ]
+}).pretty()
+db.employees.find({
+  $and: [
+    { department: "Engineering" },
+    { salary: { $gt: 80000 } }
+  ]
+}).pretty()
+db.employees.find({ name: { $not: { $regex: '^A', $options: 'i' } } }).pretty()
+db.employees.find({
+  department: "Engineering",
+  isActive: true,
+  age: { $gt: 29 },
+  skills: "nodejs"
+}).pretty()
